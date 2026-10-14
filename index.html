@@ -1,12 +1,12 @@
 <!doctype html>
-<html lang="es">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>SHM OMA · Monitorización estructural</title>
+  <title>SHM OMA · Structural monitoring</title>
   <style>
     :root {
       color-scheme: light;
@@ -31,7 +31,32 @@
     main {
       width: min(1040px, calc(100% - 32px));
       margin: 0 auto;
-      padding: clamp(48px, 8vw, 96px) 0 56px;
+      padding: clamp(28px, 5vw, 58px) 0 56px;
+    }
+    .brand-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 28px;
+      margin-bottom: clamp(44px, 7vw, 76px);
+      padding: 15px 22px;
+      overflow: hidden;
+      background: rgba(255, 255, 255, .92);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      box-shadow: 0 16px 48px rgba(24, 61, 69, .07);
+    }
+    .brand-logo {
+      display: block;
+      width: auto;
+      object-fit: contain;
+    }
+    .brand-logo--dymast {
+      height: clamp(72px, 9vw, 96px);
+    }
+    .brand-logo--uniovi {
+      height: clamp(55px, 7vw, 76px);
+      max-width: 54%;
     }
     .eyebrow {
       margin: 0 0 14px;
@@ -107,49 +132,47 @@
       color: var(--accent);
       font-weight: 750;
     }
-    footer {
-      display: flex;
-      justify-content: space-between;
-      gap: 24px;
-      margin-top: 38px;
-      padding-top: 22px;
-      color: var(--muted);
-      border-top: 1px solid var(--line);
-      font-size: .88rem;
-    }
     @media (max-width: 700px) {
+      .brand-bar {
+        gap: 14px;
+        padding: 10px 12px;
+      }
+      .brand-logo--dymast { height: 66px; }
+      .brand-logo--uniovi {
+        height: 48px;
+        max-width: 56%;
+      }
       .cards { grid-template-columns: 1fr; }
       .card { min-height: 235px; }
-      footer { flex-direction: column; }
     }
   </style>
 </head>
 <body>
   <main>
-    <p class="eyebrow">Structural Health Monitoring</p>
-    <h1>Monitorización estructural OMA</h1>
-    <p class="intro">Consulta la evolución modal más reciente o explora el histórico completo del sistema de monitorización.</p>
+    <header class="brand-bar" aria-label="Project partners">
+      <img class="brand-logo brand-logo--dymast" src="assets/dymast-logo.png" alt="DyMaSt · Dynamics, Materials and Structures">
+      <img class="brand-logo brand-logo--uniovi" src="assets/university-of-oviedo-logo.png" alt="University of Oviedo">
+    </header>
 
-    <section class="cards" aria-label="Dashboards disponibles">
-      <a class="card" href="dashboard_omadaily.html">
-        <span class="tag">Actualización horaria</span>
-        <h2>Últimas 24 horas</h2>
-        <p>Vista móvil de la ventana más reciente para seguir la evolución a corto plazo.</p>
-        <span class="open">Abrir dashboard →</span>
+    <p class="eyebrow">Structural Health Monitoring</p>
+    <h1>OMA structural monitoring</h1>
+    <p class="intro">Explore the latest modal behaviour or review the complete monitoring history.</p>
+
+    <section class="cards" aria-label="Available dashboards">
+      <a class="card" href="dashboard_omadaily_en.html">
+        <span class="tag">Hourly update</span>
+        <h2>Last 24 hours</h2>
+        <p>A rolling view of the latest monitoring window for tracking short-term modal evolution.</p>
+        <span class="open">Open dashboard →</span>
       </a>
 
-      <a class="card" href="dashboard_actual.html">
-        <span class="tag">Actualización diaria</span>
-        <h2>Histórico completo</h2>
-        <p>Consulta consolidada de los resultados acumulados de la monitorización.</p>
-        <span class="open">Abrir dashboard →</span>
+      <a class="card" href="dashboard_actual_en.html">
+        <span class="tag">Daily update</span>
+        <h2>Full history</h2>
+        <p>A consolidated view of the monitoring results accumulated over the complete observation period.</p>
+        <span class="open">Open dashboard →</span>
       </a>
     </section>
-
-    <footer>
-      <span>Datos generados automáticamente por el sistema SHM OMA.</span>
-      <span>Solo lectura · Sin parámetros internos de análisis</span>
-    </footer>
   </main>
 </body>
 </html>

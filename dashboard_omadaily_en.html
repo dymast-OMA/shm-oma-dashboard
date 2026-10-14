@@ -1,0 +1,852 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SHM OMA Dashboard</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --text: #17202a;
+      --muted: #5f6b7a;
+      --line: #d6dbe3;
+      --accent: #0b6bcb;
+      --accent-2: #26845d;
+      --warn: #ad5b00;
+      --shadow: 0 1px 4px rgba(20, 30, 45, 0.08);
+      font-family: Segoe UI, Roboto, Arial, sans-serif;
+    }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+    }
+    header {
+      padding: 18px 24px 12px;
+      border-bottom: 1px solid var(--line);
+      background: var(--panel);
+    }
+    h1 {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 650;
+      letter-spacing: 0;
+    }
+    .sub {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    main {
+      padding: 16px 24px 28px;
+      display: grid;
+      gap: 14px;
+    }
+    .toolbar {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 10px;
+      align-items: end;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      border-radius: 6px;
+      padding: 12px;
+    }
+    label {
+      display: grid;
+      gap: 5px;
+      font-size: 12px;
+      color: var(--muted);
+      min-width: 0;
+    }
+    input, select, button {
+      font: inherit;
+      font-size: 14px;
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      padding: 8px 9px;
+      background: #fff;
+      color: var(--text);
+      min-width: 0;
+    }
+    button {
+      cursor: pointer;
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+      font-weight: 600;
+    }
+    button.secondary {
+      background: #fff;
+      color: var(--text);
+      border-color: var(--line);
+      font-weight: 500;
+    }
+    .span-2 { grid-column: span 2; }
+    .span-3 { grid-column: span 3; }
+    .span-4 { grid-column: span 4; }
+    .checks {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 12px;
+      align-items: center;
+      min-height: 36px;
+    }
+    .checks label {
+      display: inline-flex;
+      grid-template: none;
+      align-items: center;
+      gap: 5px;
+      font-size: 13px;
+      color: var(--text);
+    }
+    .checks input {
+      padding: 0;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .stat {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 12px;
+      box-shadow: var(--shadow);
+    }
+    .stat .value {
+      font-size: 20px;
+      font-weight: 700;
+    }
+    .stat .label {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 3px;
+    }
+    .chart-wrap {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 12px;
+      box-shadow: var(--shadow);
+      min-height: 560px;
+    }
+    svg {
+      width: 100%;
+      height: 560px;
+      display: block;
+      cursor: default;
+      user-select: none;
+      touch-action: none;
+    }
+    svg.can-pan {
+      cursor: grab;
+    }
+    svg.is-panning {
+      cursor: grabbing;
+    }
+    .compact-dashboard .hide-rolling {
+      display: none !important;
+    }
+    .compact-dashboard .toolbar {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+    .axis text {
+      fill: var(--muted);
+      font-size: 12px;
+    }
+    .axis line, .axis path {
+      stroke: var(--line);
+      shape-rendering: crispEdges;
+    }
+    .grid line {
+      stroke: #e8ebf0;
+    }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 16px;
+      margin: 8px 4px 0;
+      font-size: 13px;
+    }
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .swatch {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .config {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 12px;
+      box-shadow: var(--shadow);
+    }
+    .config h2 {
+      margin: 0 0 8px;
+      font-size: 16px;
+    }
+    .config pre {
+      margin: 0;
+      white-space: pre-wrap;
+      color: #2d3748;
+      font-size: 12px;
+      line-height: 1.4;
+      max-height: 260px;
+      overflow: auto;
+    }
+    .tooltip {
+      position: fixed;
+      pointer-events: none;
+      background: #111827;
+      color: white;
+      padding: 8px 9px;
+      font-size: 12px;
+      border-radius: 5px;
+      box-shadow: 0 8px 22px rgba(0,0,0,0.18);
+      display: none;
+      z-index: 5;
+      max-width: 280px;
+    }
+    .empty {
+      display: grid;
+      place-items: center;
+      height: 420px;
+      color: var(--muted);
+      font-size: 15px;
+    }
+    @media (max-width: 900px) {
+      .toolbar, .stats {
+        grid-template-columns: 1fr;
+      }
+      .span-2, .span-3, .span-4 {
+        grid-column: span 1;
+      }
+      main, header {
+        padding-left: 12px;
+        padding-right: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>SHM OMA Dashboard</h1>
+    <div class="sub">FDD/SSI modal results generated locally. Last update: <span id="generatedAt"></span></div>
+  </header>
+  <main>
+    <section class="toolbar">
+      <label class="span-2 hide-rolling">From<input id="fromDate" type="date"></label>
+      <label class="span-2 hide-rolling">To<input id="toDate" type="date"></label>
+      <label class="span-2 hide-rolling">Aggregation
+        <select id="aggregation">
+          <option value="hour">Hourly</option>
+          <option value="day">Daily</option>
+          <option value="month">Monthly</option>
+        </select>
+      </label>
+      <label class="span-2">Method<div class="checks" id="methodChecks"></div></label>
+      <label class="span-2">Modes<div class="checks" id="modeChecks"></div></label>
+      <button id="applyBtn" class="span-1 hide-rolling">Apply</button>
+      <button id="last7Btn" class="secondary span-1 hide-rolling">Week</button>
+      <button id="last30Btn" class="secondary span-1 hide-rolling">Month</button>
+      <button id="allBtn" class="secondary span-1 hide-rolling">All</button>
+      <button id="zoomOutBtn" class="secondary span-1 hide-rolling" title="Zoom out on the time axis">Zoom -</button>
+      <button id="zoomInBtn" class="secondary span-1 hide-rolling" title="Zoom in on the time axis">Zoom +</button>
+      <button id="resetZoomBtn" class="secondary span-1 hide-rolling" title="Return to the selected range">Reset</button>
+      <label class="span-2 hide-rolling">Auto-refresh
+        <select id="refresh">
+          <option value="0">Off</option>
+          <option value="60">60 s</option>
+          <option value="300">5 min</option>
+          <option value="1800">30 min</option>
+        </select>
+      </label>
+    </section>
+
+    <section class="stats">
+      <div class="stat"><div class="value" id="statPoints">0</div><div class="label">visible points</div></div>
+      <div class="stat"><div class="value" id="statRange">-</div><div class="label">period</div></div>
+      <div class="stat"><div class="value" id="statMethods">-</div><div class="label">methods</div></div>
+      <div class="stat"><div class="value" id="statModes">-</div><div class="label">modes</div></div>
+    </section>
+
+    <section class="chart-wrap">
+      <svg id="chart" role="img" aria-label="Frequency evolution over time"></svg>
+      <div class="legend" id="legend"></div>
+    </section>
+</main>
+  <div class="tooltip" id="tooltip"></div>
+  <script>
+    const payload = {"records": [{"timestamp": "2026-10-13T12:00:00", "method": "FDD", "mode_index": 1, "frequency_hz": 1.7658859479750326, "damping_ratio": NaN}, {"timestamp": "2026-10-13T12:00:00", "method": "FDD", "mode_index": 2, "frequency_hz": 1.9430454593897237, "damping_ratio": NaN}, {"timestamp": "2026-10-13T12:00:00", "method": "FDD", "mode_index": 3, "frequency_hz": 2.190461657984373, "damping_ratio": NaN}, {"timestamp": "2026-10-13T12:00:00", "method": "FDD", "mode_index": 4, "frequency_hz": 5.36124144030446, "damping_ratio": NaN}, {"timestamp": "2026-10-13T12:00:00", "method": "FDD", "mode_index": 5, "frequency_hz": 5.813374944479768, "damping_ratio": NaN}, {"timestamp": "2026-10-13T12:00:00", "method": "SSI", "mode_index": 1, "frequency_hz": 1.761719395555238, "damping_ratio": 0.005659255809294149}, {"timestamp": "2026-10-13T12:00:00", "method": "SSI", "mode_index": 2, "frequency_hz": 1.9455237161349563, "damping_ratio": 0.013918470400216371}, {"timestamp": "2026-10-13T12:00:00", "method": "SSI", "mode_index": 3, "frequency_hz": 2.189084518215065, "damping_ratio": 0.0052472178592607435}, {"timestamp": "2026-10-13T12:00:00", "method": "SSI", "mode_index": 4, "frequency_hz": 5.361778356806632, "damping_ratio": 0.015126550504012183}, {"timestamp": "2026-10-13T12:00:00", "method": "SSI", "mode_index": 5, "frequency_hz": 5.861642123156308, "damping_ratio": 0.025151517555850284}, {"timestamp": "2026-10-13T13:00:00", "method": "FDD", "mode_index": 1, "frequency_hz": 1.7693306894552592, "damping_ratio": NaN}, {"timestamp": "2026-10-13T13:00:00", "method": "FDD", "mode_index": 2, "frequency_hz": 1.9409318124752242, "damping_ratio": NaN}, {"timestamp": "2026-10-13T13:00:00", "method": "FDD", "mode_index": 3, "frequency_hz": 2.191964417025954, "damping_ratio": NaN}, {"timestamp": "2026-10-13T13:00:00", "method": "FDD", "mode_index": 4, "frequency_hz": 5.312741132660642, "damping_ratio": NaN}, {"timestamp": "2026-10-13T13:00:00", "method": "FDD", "mode_index": 5, "frequency_hz": 5.807632099834505, "damping_ratio": NaN}, {"timestamp": "2026-10-13T13:00:00", "method": "SSI", "mode_index": 1, "frequency_hz": 1.7678256488183146, "damping_ratio": 0.006539729474972119}, {"timestamp": "2026-10-13T13:00:00", "method": "SSI", "mode_index": 2, "frequency_hz": 1.946975467648346, "damping_ratio": 0.014099336379900396}, {"timestamp": "2026-10-13T13:00:00", "method": "SSI", "mode_index": 3, "frequency_hz": 2.192350254270467, "damping_ratio": 0.0053077422361734366}, {"timestamp": "2026-10-13T13:00:00", "method": "SSI", "mode_index": 4, "frequency_hz": 5.380592709151794, "damping_ratio": 0.014183273431962282}, {"timestamp": "2026-10-13T13:00:00", "method": "SSI", "mode_index": 5, "frequency_hz": 5.859527231119031, "damping_ratio": 0.02834893493159888}, {"timestamp": "2026-10-13T14:00:00", "method": "FDD", "mode_index": 1, "frequency_hz": 1.7706276500125773, "damping_ratio": NaN}, {"timestamp": "2026-10-13T14:00:00", "method": "FDD", "mode_index": 2, "frequency_hz": 1.9405578377542425, "damping_ratio": NaN}, {"timestamp": "2026-10-13T14:00:00", "method": "FDD", "mode_index": 3, "frequency_hz": 2.192441022556306, "damping_ratio": NaN}, {"timestamp": "2026-10-13T14:00:00", "method": "FDD", "mode_index": 4, "frequency_hz": 5.385710642838179, "damping_ratio": NaN}, {"timestamp": "2026-10-13T14:00:00", "method": "FDD", "mode_index": 5, "frequency_hz": 5.828176782496771, "damping_ratio": NaN}, {"timestamp": "2026-10-13T14:00:00", "method": "SSI", "mode_index": 1, "frequency_hz": 1.7672686746653794, "damping_ratio": 0.005597528813935685}, {"timestamp": "2026-10-13T14:00:00", "method": "SSI", "mode_index": 2, "frequency_hz": 1.9452100479686618, "damping_ratio": 0.008210849898229197}, {"timestamp": "2026-10-13T14:00:00", "method": "SSI", "mode_index": 3, "frequency_hz": 2.195203515986034, "damping_ratio": 0.0050541010927727965}, {"timestamp": "2026-10-13T14:00:00", "method": "SSI", "mode_index": 4, "frequency_hz": 5.381898213243195, "damping_ratio": 0.012575895233408359}, {"timestamp": "2026-10-13T14:00:00", "method": "SSI", "mode_index": 5, "frequency_hz": 5.8761520984204925, "damping_ratio": 0.029866305764466826}, {"timestamp": "2026-10-13T15:00:00", "method": "FDD", "mode_index": 1, "frequency_hz": 1.7700121040462706, "damping_ratio": NaN}, {"timestamp": "2026-10-13T15:00:00", "method": "FDD", "mode_index": 2, "frequency_hz": 1.9429600404863507, "damping_ratio": NaN}, {"timestamp": "2026-10-13T15:00:00", "method": "FDD", "mode_index": 3, "frequency_hz": 2.1921485062862556, "damping_ratio": NaN}, {"timestamp": "2026-10-13T15:00:00", "method": "FDD", "mode_index": 4, "frequency_hz": 5.3249215809467065, "damping_ratio": NaN}, {"timestamp": "2026-10-13T15:00:00", "method": "FDD", "mode_index": 5, "frequency_hz": 5.811955279734287, "damping_ratio": NaN}, {"timestamp": "2026-10-13T15:00:00", "method": "SSI", "mode_index": 1, "frequency_hz": 1.7708904755656487, "damping_ratio": 0.0068547964369596055}, {"timestamp": "2026-10-13T15:00:00", "method": "SSI", "mode_index": 2, "frequency_hz": 1.9440832652126814, "damping_ratio": 0.011619862879331241}, {"timestamp": "2026-10-13T15:00:00", "method": "SSI", "mode_index": 3, "frequency_hz": 2.190913228120777, "damping_ratio": 0.0058748733214800805}, {"timestamp": "2026-10-13T15:00:00", "method": "SSI", "mode_index": 4, "frequency_hz": 5.373250132986016, "damping_ratio": 0.014747287782620699}, {"timestamp": "2026-10-13T15:00:00", "method": "SSI", "mode_index": 5, "frequency_hz": 5.896623839079793, "damping_ratio": 0.02550299391872743}, {"timestamp": "2026-10-13T16:00:00", "method": "FDD", "mode_index": 1, "frequency_hz": 1.7730816069726043, "damping_ratio": NaN}, {"timestamp": "2026-10-13T16:00:00", "method": "FDD", "mode_index": 2, "frequency_hz": 1.9423148186408563, "damping_ratio": NaN}, {"timestamp": "2026-10-13T16:00:00", "method": "FDD", "mode_index": 3, "frequency_hz": 2.193867361319695, "damping_ratio": NaN}, {"timestamp": "2026-10-13T16:00:00", "method": "FDD", "mode_index": 4, "frequency_hz": 5.311899694482549, "damping_ratio": NaN}, {"timestamp": "2026-10-13T16:00:00", "method": "FDD", "mode_index": 5, "frequency_hz": 5.785096989127244, "damping_ratio": NaN}, {"timestamp": "2026-10-13T16:00:00", "method": "SSI", "mode_index": 1, "frequency_hz": 1.767862120186632, "damping_ratio": 0.004571557706004041}, {"timestamp": "2026-10-13T16:00:00", "method": "SSI", "mode_index": 2, "frequency_hz": 1.9351380603746382, "damping_ratio": 0.014178204268878176}, {"timestamp": "2026-10-13T16:00:00", "method": "SSI", "mode_index": 3, "frequency_hz": 2.1934143417256227, "damping_ratio": 0.004772556383799233}, {"timestamp": "2026-10-13T16:00:00", "method": "SSI", "mode_index": 4, "frequency_hz": 5.389868211193087, "damping_ratio": 0.013193096981585379}, {"timestamp": "2026-10-13T16:00:00", "method": "SSI", "mode_index": 5, "frequency_hz": 5.8855377471783505, "damping_ratio": 0.02575256206533135}, {"timestamp": "2026-10-13T17:00:00", "method": "FDD", "mode_index": 1, "frequency_hz": 1.7723484160719458, "damping_ratio": NaN}, {"timestamp": "2026-10-13T17:00:00", "method": "FDD", "mode_index": 2, "frequency_hz": 1.9434541505025948, "damping_ratio": NaN}, {"timestamp": "2026-10-13T17:00:00", "method": "FDD", "mode_index": 3, "frequency_hz": 2.1948681186532277, "damping_ratio": NaN}, {"timestamp": "2026-10-13T17:00:00", "method": "FDD", "mode_index": 4, "frequency_hz": 5.2889557332846975, "damping_ratio": NaN}, {"timestamp": "2026-10-13T17:00:00", "method": "FDD", "mode_index": 5, "frequency_hz": 5.777527999104489, "damping_ratio": NaN}, {"timestamp": "2026-10-13T17:00:00", "method": "SSI", "mode_index": 1, "frequency_hz": 1.7710841376919717, "damping_ratio": 0.007421239024893773}, {"timestamp": "2026-10-13T17:00:00", "method": "SSI", "mode_index": 2, "frequency_hz": 1.9487084014298988, "damping_ratio": 0.009812496068287697}, {"timestamp": "2026-10-13T17:00:00", "method": "SSI", "mode_index": 3, "frequency_hz": 2.1935083900026653, "damping_ratio": 0.006366692231733815}, {"timestamp": "2026-10-13T17:00:00", "method": "SSI", "mode_index": 4, "frequency_hz": 5.395475713187427, "damping_ratio": 0.010085523890458503}, {"timestamp": "2026-10-13T17:00:00", "method": "SSI", "mode_index": 5, "frequency_hz": 5.885919500699896, "damping_ratio": 0.02343395850618148}, {"timestamp": "2026-10-13T18:00:00", "method": "FDD", "mode_index": 1, "frequency_hz": 1.7707311557793664, "damping_ratio": NaN}, {"timestamp": "2026-10-13T18:00:00", "method": "FDD", "mode_index": 2, "frequency_hz": 1.9489286155933003, "damping_ratio": NaN}, {"timestamp": "2026-10-13T18:00:00", "method": "FDD", "mode_index": 3, "frequency_hz": 2.196483321330858, "damping_ratio": NaN}, {"timestamp": "2026-10-13T18:00:00", "method": "FDD", "mode_index": 4, "frequency_hz": 5.2729372374446015, "damping_ratio": NaN}, {"timestamp": "2026-10-13T18:00:00", "method": "FDD", "mode_index": 5, "frequency_hz": 5.803359688563285, "damping_ratio": NaN}, {"timestamp": "2026-10-13T18:00:00", "method": "SSI", "mode_index": 1, "frequency_hz": 1.7703532377006863, "damping_ratio": 0.005510832426420176}, {"timestamp": "2026-10-13T18:00:00", "method": "SSI", "mode_index": 2, "frequency_hz": 1.9465354069343674, "damping_ratio": 0.00927190792890246}, {"timestamp": "2026-10-13T18:00:00", "method": "SSI", "mode_index": 3, "frequency_hz": 2.197522314541973, "damping_ratio": 0.006856871841708419}, {"timestamp": "2026-10-13T18:00:00", "method": "SSI", "mode_index": 4, "frequency_hz": 5.398261029962498, "damping_ratio": 0.010770712254790977}, {"timestamp": "2026-10-13T18:00:00", "method": "SSI", "mode_index": 5, "frequency_hz": 5.849723644314496, "damping_ratio": 0.02493557637145901}, {"timestamp": "2026-10-13T19:00:00", "method": "FDD", "mode_index": 1, "frequency_hz": 1.7747321213166523, "damping_ratio": NaN}, {"timestamp": "2026-10-13T19:00:00", "method": "FDD", "mode_index": 2, "frequency_hz": 1.9481046978348078, "damping_ratio": NaN}, {"timestamp": "2026-10-13T19:00:00", "method": "FDD", "mode_index": 3, "frequency_hz": 2.1936527399680363, "damping_ratio": NaN}, {"timestamp": "2026-10-13T19:00:00", "method": "FDD", "mode_index": 4, "frequency_hz": 5.366652353229492, "damping_ratio": NaN}, {"timestamp": "2026-10-13T19:00:00", "method": "FDD", "mode_index": 5, "frequency_hz": 5.804339796517793, "damping_ratio": NaN}, {"timestamp": "2026-10-13T19:00:00", "method": "SSI", "mode_index": 1, "frequency_hz": 1.7782753286166713, "damping_ratio": 0.0064720456536780215}, {"timestamp": "2026-10-13T19:00:00", "method": "SSI", "mode_index": 2, "frequency_hz": 1.9362428286053226, "damping_ratio": 0.015057458816367742}, {"timestamp": "2026-10-13T19:00:00", "method": "SSI", "mode_index": 3, "frequency_hz": 2.196694243580425, "damping_ratio": 0.005184285245558999}, {"timestamp": "2026-10-13T19:00:00", "method": "SSI", "mode_index": 4, "frequency_hz": 5.392138174742614, "damping_ratio": 0.012092499379904215}, {"timestamp": "2026-10-13T19:00:00", "method": "SSI", "mode_index": 5, "frequency_hz": 5.890346471752943, "damping_ratio": 0.02570295655789895}, {"timestamp": "2026-10-13T20:00:00", "method": "FDD", "mode_index": 1, "frequency_hz": 1.7764220640058037, "damping_ratio": NaN}, {"timestamp": "2026-10-13T20:00:00", "method": "FDD", "mode_index": 2, "frequency_hz": 1.9372240269259715, "damping_ratio": NaN}, {"timestamp": "2026-10-13T20:00:00", "method": "FDD", "mode_index": 3, "frequency_hz": 2.1926452870746482, "damping_ratio": NaN}, {"timestamp": "2026-10-13T20:00:00", "method": "FDD", "mode_index": 4, "frequency_hz": 5.325525732246296, "damping_ratio": NaN}, {"timestamp": "2026-10-13T20:00:00", "method": "FDD", "mode_index": 5, "frequency_hz": 5.841609730690923, "damping_ratio": NaN}, {"timestamp": "2026-10-13T20:00:00", "method": "SSI", "mode_index": 1, "frequency_hz": 1.7733012068881282, "damping_ratio": 0.005265118664552529}, {"timestamp": "2026-10-13T20:00:00", "method": "SSI", "mode_index": 2, "frequency_hz": 1.947142912668498, "damping_ratio": 0.022777594021399762}, {"timestamp": "2026-10-13T20:00:00", "method": "SSI", "mode_index": 3, "frequency_hz": 2.188255643835885, "damping_ratio": 0.006577272797599222}, {"timestamp": "2026-10-13T20:00:00", "method": "SSI", "mode_index": 4, "frequency_hz": 5.364864802527957, "damping_ratio": 0.01698835807503812}, {"timestamp": "2026-10-13T20:00:00", "method": "SSI", "mode_index": 5, "frequency_hz": 5.883030596347909, "damping_ratio": 0.02318422892023443}, {"timestamp": "2026-10-13T21:00:00", "method": "FDD", "mode_index": 1, "frequency_hz": 1.7726116866517825, "damping_ratio": NaN}, {"timestamp": "2026-10-13T21:00:00", "method": "FDD", "mode_index": 2, "frequency_hz": 1.941526310002362, "damping_ratio": NaN}, {"timestamp": "2026-10-13T21:00:00", "method": "FDD", "mode_index": 3, "frequency_hz": 2.1971864907290617, "damping_ratio": NaN}, {"timestamp": "2026-10-13T21:00:00", "method": "FDD", "mode_index": 4, "frequency_hz": 5.334207020346821, "damping_ratio": NaN}, {"timestamp": "2026-10-13T21:00:00", "method": "FDD", "mode_index": 5, "frequency_hz": 5.8103300253453165, "damping_ratio": NaN}, {"timestamp": "2026-10-13T21:00:00", "method": "SSI", "mode_index": 1, "frequency_hz": 1.7720544166336567, "damping_ratio": 0.0065659796342196685}, {"timestamp": "2026-10-13T21:00:00", "method": "SSI", "mode_index": 2, "frequency_hz": 1.9449777268148543, "damping_ratio": 0.006116733605554144}, {"timestamp": "2026-10-13T21:00:00", "method": "SSI", "mode_index": 3, "frequency_hz": 2.1982211090136303, "damping_ratio": 0.004589355456317766}, {"timestamp": "2026-10-13T21:00:00", "method": "SSI", "mode_index": 4, "frequency_hz": 5.387361588695206, "damping_ratio": 0.012342193749046146}, {"timestamp": "2026-10-13T21:00:00", "method": "SSI", "mode_index": 5, "frequency_hz": 5.865243782442412, "damping_ratio": 0.026096579812591704}, {"timestamp": "2026-10-13T22:00:00", "method": "FDD", "mode_index": 1, "frequency_hz": 1.7807291247013661, "damping_ratio": NaN}, {"timestamp": "2026-10-13T22:00:00", "method": "FDD", "mode_index": 2, "frequency_hz": 1.9430250658171548, "damping_ratio": NaN}, {"timestamp": "2026-10-13T22:00:00", "method": "FDD", "mode_index": 3, "frequency_hz": 2.194920976100707, "damping_ratio": NaN}, {"timestamp": "2026-10-13T22:00:00", "method": "FDD", "mode_index": 4, "frequency_hz": 5.323855958716563, "damping_ratio": NaN}, {"timestamp": "2026-10-13T22:00:00", "method": "FDD", "mode_index": 5, "frequency_hz": 5.77809605996567, "damping_ratio": NaN}, {"timestamp": "2026-10-13T22:00:00", "method": "SSI", "mode_index": 1, "frequency_hz": 1.791145784162951, "damping_ratio": 0.01193916697657272}, {"timestamp": "2026-10-13T22:00:00", "method": "SSI", "mode_index": 2, "frequency_hz": 1.8169036859480707, "damping_ratio": 0.02495204473482707}, {"timestamp": "2026-10-13T22:00:00", "method": "SSI", "mode_index": 3, "frequency_hz": 2.1937794020404575, "damping_ratio": 0.0034402762443452774}, {"timestamp": "2026-10-13T22:00:00", "method": "SSI", "mode_index": 4, "frequency_hz": 5.351803254021169, "damping_ratio": 0.014314310516504555}, {"timestamp": "2026-10-13T22:00:00", "method": "SSI", "mode_index": 5, "frequency_hz": 5.862889751403382, "damping_ratio": 0.02186701102097141}, {"timestamp": "2026-10-13T23:00:00", "method": "FDD", "mode_index": 1, "frequency_hz": 1.772616363368272, "damping_ratio": NaN}, {"timestamp": "2026-10-13T23:00:00", "method": "FDD", "mode_index": 2, "frequency_hz": 1.9392952786668585, "damping_ratio": NaN}, {"timestamp": "2026-10-13T23:00:00", "method": "FDD", "mode_index": 3, "frequency_hz": 2.1968089225229903, "damping_ratio": NaN}, {"timestamp": "2026-10-13T23:00:00", "method": "FDD", "mode_index": 4, "frequency_hz": 5.3128893509865955, "damping_ratio": NaN}, {"timestamp": "2026-10-13T23:00:00", "method": "FDD", "mode_index": 5, "frequency_hz": 5.759289607459081, "damping_ratio": NaN}, {"timestamp": "2026-10-13T23:00:00", "method": "SSI", "mode_index": 1, "frequency_hz": 1.7738901645407548, "damping_ratio": 0.006994199963232035}, {"timestamp": "2026-10-13T23:00:00", "method": "SSI", "mode_index": 2, "frequency_hz": 1.9410040201578818, "damping_ratio": 0.003547578910311812}, {"timestamp": "2026-10-13T23:00:00", "method": "SSI", "mode_index": 3, "frequency_hz": 2.195220990946418, "damping_ratio": 0.0047127703734615445}, {"timestamp": "2026-10-13T23:00:00", "method": "SSI", "mode_index": 4, "frequency_hz": 5.371009241671981, "damping_ratio": 0.01254499013118329}, {"timestamp": "2026-10-13T23:00:00", "method": "SSI", "mode_index": 5, "frequency_hz": 5.891460460122261, "damping_ratio": 0.025345792065338962}, {"timestamp": "2026-10-14T00:00:00", "method": "FDD", "mode_index": 1, "frequency_hz": 1.7709600156469494, "damping_ratio": NaN}, {"timestamp": "2026-10-14T00:00:00", "method": "FDD", "mode_index": 2, "frequency_hz": 1.9385699799488243, "damping_ratio": NaN}, {"timestamp": "2026-10-14T00:00:00", "method": "FDD", "mode_index": 3, "frequency_hz": 2.1946703421685774, "damping_ratio": NaN}, {"timestamp": "2026-10-14T00:00:00", "method": "FDD", "mode_index": 4, "frequency_hz": 5.383572334999845, "damping_ratio": NaN}, {"timestamp": "2026-10-14T00:00:00", "method": "FDD", "mode_index": 5, "frequency_hz": 5.8035039597493565, "damping_ratio": NaN}, {"timestamp": "2026-10-14T00:00:00", "method": "SSI", "mode_index": 1, "frequency_hz": 1.7717474913356457, "damping_ratio": 0.005705619912282741}, {"timestamp": "2026-10-14T00:00:00", "method": "SSI", "mode_index": 2, "frequency_hz": 1.940091203753441, "damping_ratio": 0.0033334481904606942}, {"timestamp": "2026-10-14T00:00:00", "method": "SSI", "mode_index": 3, "frequency_hz": 2.1950738735124222, "damping_ratio": 0.005746039193351635}, {"timestamp": "2026-10-14T00:00:00", "method": "SSI", "mode_index": 4, "frequency_hz": 5.374996248602672, "damping_ratio": 0.012734045593348937}, {"timestamp": "2026-10-14T00:00:00", "method": "SSI", "mode_index": 5, "frequency_hz": 5.872285424107612, "damping_ratio": 0.01816893721337146}, {"timestamp": "2026-10-14T01:00:00", "method": "FDD", "mode_index": 1, "frequency_hz": 1.7721222431861505, "damping_ratio": NaN}, {"timestamp": "2026-10-14T01:00:00", "method": "FDD", "mode_index": 2, "frequency_hz": 1.9389552654896705, "damping_ratio": NaN}, {"timestamp": "2026-10-14T01:00:00", "method": "FDD", "mode_index": 3, "frequency_hz": 2.1953591062277815, "damping_ratio": NaN}, {"timestamp": "2026-10-14T01:00:00", "method": "FDD", "mode_index": 4, "frequency_hz": 5.288129330775927, "damping_ratio": NaN}, {"timestamp": "2026-10-14T01:00:00", "method": "FDD", "mode_index": 5, "frequency_hz": 5.765850439461722, "damping_ratio": NaN}, {"timestamp": "2026-10-14T01:00:00", "method": "SSI", "mode_index": 1, "frequency_hz": 1.7715148511809358, "damping_ratio": 0.005952219770183892}, {"timestamp": "2026-10-14T01:00:00", "method": "SSI", "mode_index": 2, "frequency_hz": 1.94034474884194, "damping_ratio": 0.004821584833827105}, {"timestamp": "2026-10-14T01:00:00", "method": "SSI", "mode_index": 3, "frequency_hz": 2.1932972743836308, "damping_ratio": 0.005106015243817973}, {"timestamp": "2026-10-14T01:00:00", "method": "SSI", "mode_index": 4, "frequency_hz": 5.376944280683942, "damping_ratio": 0.01331771640142512}, {"timestamp": "2026-10-14T01:00:00", "method": "SSI", "mode_index": 5, "frequency_hz": 5.857693604313707, "damping_ratio": 0.02134178107935307}, {"timestamp": "2026-10-14T02:00:00", "method": "FDD", "mode_index": 1, "frequency_hz": 1.7724505374922632, "damping_ratio": NaN}, {"timestamp": "2026-10-14T02:00:00", "method": "FDD", "mode_index": 2, "frequency_hz": 1.9426132330150725, "damping_ratio": NaN}, {"timestamp": "2026-10-14T02:00:00", "method": "FDD", "mode_index": 3, "frequency_hz": 2.195044854838426, "damping_ratio": NaN}, {"timestamp": "2026-10-14T02:00:00", "method": "FDD", "mode_index": 4, "frequency_hz": 5.376908993401489, "damping_ratio": NaN}, {"timestamp": "2026-10-14T02:00:00", "method": "FDD", "mode_index": 5, "frequency_hz": 5.803260722349026, "damping_ratio": NaN}, {"timestamp": "2026-10-14T02:00:00", "method": "SSI", "mode_index": 1, "frequency_hz": 1.7727127692335198, "damping_ratio": 0.004801727086310222}, {"timestamp": "2026-10-14T02:00:00", "method": "SSI", "mode_index": 2, "frequency_hz": 1.9416283655374622, "damping_ratio": 0.004855749536125678}, {"timestamp": "2026-10-14T02:00:00", "method": "SSI", "mode_index": 3, "frequency_hz": 2.1936611103331947, "damping_ratio": 0.005910259979536356}, {"timestamp": "2026-10-14T02:00:00", "method": "SSI", "mode_index": 4, "frequency_hz": 5.375069438224064, "damping_ratio": 0.013269256036558336}, {"timestamp": "2026-10-14T02:00:00", "method": "SSI", "mode_index": 5, "frequency_hz": 5.909983911290846, "damping_ratio": 0.016520334631513776}, {"timestamp": "2026-10-14T03:00:00", "method": "FDD", "mode_index": 1, "frequency_hz": 1.7728980309434463, "damping_ratio": NaN}, {"timestamp": "2026-10-14T03:00:00", "method": "FDD", "mode_index": 2, "frequency_hz": 1.944139317888628, "damping_ratio": NaN}, {"timestamp": "2026-10-14T03:00:00", "method": "FDD", "mode_index": 3, "frequency_hz": 2.194193055543307, "damping_ratio": NaN}, {"timestamp": "2026-10-14T03:00:00", "method": "FDD", "mode_index": 4, "frequency_hz": 5.399555566325546, "damping_ratio": NaN}, {"timestamp": "2026-10-14T03:00:00", "method": "FDD", "mode_index": 5, "frequency_hz": 5.862194655219291, "damping_ratio": NaN}, {"timestamp": "2026-10-14T03:00:00", "method": "SSI", "mode_index": 1, "frequency_hz": 1.7705670456490246, "damping_ratio": 0.005463269682961569}, {"timestamp": "2026-10-14T03:00:00", "method": "SSI", "mode_index": 2, "frequency_hz": 1.9424749022888246, "damping_ratio": 0.01015750158658128}, {"timestamp": "2026-10-14T03:00:00", "method": "SSI", "mode_index": 3, "frequency_hz": 2.196014749575324, "damping_ratio": 0.003679151839095098}, {"timestamp": "2026-10-14T03:00:00", "method": "SSI", "mode_index": 4, "frequency_hz": 5.384174072067975, "damping_ratio": 0.01283989348496531}, {"timestamp": "2026-10-14T03:00:00", "method": "SSI", "mode_index": 5, "frequency_hz": 5.843600653430945, "damping_ratio": 0.0172686526171445}, {"timestamp": "2026-10-14T04:00:00", "method": "FDD", "mode_index": 1, "frequency_hz": 1.7710939115224278, "damping_ratio": NaN}, {"timestamp": "2026-10-14T04:00:00", "method": "FDD", "mode_index": 2, "frequency_hz": 1.9437551739319778, "damping_ratio": NaN}, {"timestamp": "2026-10-14T04:00:00", "method": "FDD", "mode_index": 3, "frequency_hz": 2.19353999056261, "damping_ratio": NaN}, {"timestamp": "2026-10-14T04:00:00", "method": "FDD", "mode_index": 4, "frequency_hz": 5.375177124289715, "damping_ratio": NaN}, {"timestamp": "2026-10-14T04:00:00", "method": "FDD", "mode_index": 5, "frequency_hz": 5.853499904433958, "damping_ratio": NaN}, {"timestamp": "2026-10-14T04:00:00", "method": "SSI", "mode_index": 1, "frequency_hz": 1.770668190619633, "damping_ratio": 0.004955027218389812}, {"timestamp": "2026-10-14T04:00:00", "method": "SSI", "mode_index": 2, "frequency_hz": 1.9420715083683935, "damping_ratio": 0.0053913297547907085}, {"timestamp": "2026-10-14T04:00:00", "method": "SSI", "mode_index": 3, "frequency_hz": 2.193578778885894, "damping_ratio": 0.00517786325531919}, {"timestamp": "2026-10-14T04:00:00", "method": "SSI", "mode_index": 4, "frequency_hz": 5.3928788017200295, "damping_ratio": 0.011040979000241945}, {"timestamp": "2026-10-14T04:00:00", "method": "SSI", "mode_index": 5, "frequency_hz": 5.848078732782725, "damping_ratio": 0.017370623803606135}, {"timestamp": "2026-10-14T05:00:00", "method": "FDD", "mode_index": 1, "frequency_hz": 1.7701296694846753, "damping_ratio": NaN}, {"timestamp": "2026-10-14T05:00:00", "method": "FDD", "mode_index": 2, "frequency_hz": 1.9378672335217904, "damping_ratio": NaN}, {"timestamp": "2026-10-14T05:00:00", "method": "FDD", "mode_index": 3, "frequency_hz": 2.1888033086975014, "damping_ratio": NaN}, {"timestamp": "2026-10-14T05:00:00", "method": "FDD", "mode_index": 4, "frequency_hz": 5.335838047663484, "damping_ratio": NaN}, {"timestamp": "2026-10-14T05:00:00", "method": "FDD", "mode_index": 5, "frequency_hz": 5.84728691234089, "damping_ratio": NaN}, {"timestamp": "2026-10-14T05:00:00", "method": "SSI", "mode_index": 1, "frequency_hz": 1.7683940848857151, "damping_ratio": 0.006006221668105377}, {"timestamp": "2026-10-14T05:00:00", "method": "SSI", "mode_index": 2, "frequency_hz": 1.9376852529651363, "damping_ratio": 0.00965978781109849}, {"timestamp": "2026-10-14T05:00:00", "method": "SSI", "mode_index": 3, "frequency_hz": 2.188859041560793, "damping_ratio": 0.004200220730603735}, {"timestamp": "2026-10-14T05:00:00", "method": "SSI", "mode_index": 4, "frequency_hz": 5.387552060231421, "damping_ratio": 0.012623412740236898}, {"timestamp": "2026-10-14T05:00:00", "method": "SSI", "mode_index": 5, "frequency_hz": 5.859136225178827, "damping_ratio": 0.022443987667140935}, {"timestamp": "2026-10-14T06:00:00", "method": "FDD", "mode_index": 1, "frequency_hz": 1.7690370569551213, "damping_ratio": NaN}, {"timestamp": "2026-10-14T06:00:00", "method": "FDD", "mode_index": 2, "frequency_hz": 1.9429095658133104, "damping_ratio": NaN}, {"timestamp": "2026-10-14T06:00:00", "method": "FDD", "mode_index": 3, "frequency_hz": 2.1873096858808014, "damping_ratio": NaN}, {"timestamp": "2026-10-14T06:00:00", "method": "FDD", "mode_index": 4, "frequency_hz": 5.27335911037003, "damping_ratio": NaN}, {"timestamp": "2026-10-14T06:00:00", "method": "FDD", "mode_index": 5, "frequency_hz": 5.752135154423892, "damping_ratio": NaN}, {"timestamp": "2026-10-14T06:00:00", "method": "SSI", "mode_index": 1, "frequency_hz": 1.7672350388338973, "damping_ratio": 0.006559644152109414}, {"timestamp": "2026-10-14T06:00:00", "method": "SSI", "mode_index": 2, "frequency_hz": 1.9424475517165918, "damping_ratio": 0.010013639966487985}, {"timestamp": "2026-10-14T06:00:00", "method": "SSI", "mode_index": 3, "frequency_hz": 2.183877626293899, "damping_ratio": 0.005074570552248992}, {"timestamp": "2026-10-14T06:00:00", "method": "SSI", "mode_index": 4, "frequency_hz": 5.379531553305686, "damping_ratio": 0.010661897234144346}, {"timestamp": "2026-10-14T06:00:00", "method": "SSI", "mode_index": 5, "frequency_hz": 5.899303676088675, "damping_ratio": 0.02929703895176665}, {"timestamp": "2026-10-14T07:00:00", "method": "FDD", "mode_index": 1, "frequency_hz": 1.7685613829542906, "damping_ratio": NaN}, {"timestamp": "2026-10-14T07:00:00", "method": "FDD", "mode_index": 2, "frequency_hz": 1.9377375884580914, "damping_ratio": NaN}, {"timestamp": "2026-10-14T07:00:00", "method": "FDD", "mode_index": 3, "frequency_hz": 2.1863612844169977, "damping_ratio": NaN}, {"timestamp": "2026-10-14T07:00:00", "method": "FDD", "mode_index": 4, "frequency_hz": 5.249738588806217, "damping_ratio": NaN}, {"timestamp": "2026-10-14T07:00:00", "method": "FDD", "mode_index": 5, "frequency_hz": 5.802845968212328, "damping_ratio": NaN}, {"timestamp": "2026-10-14T07:00:00", "method": "SSI", "mode_index": 1, "frequency_hz": 1.7651292883042882, "damping_ratio": 0.005019915134114917}, {"timestamp": "2026-10-14T07:00:00", "method": "SSI", "mode_index": 2, "frequency_hz": 1.938039934156127, "damping_ratio": 0.008460175277088892}, {"timestamp": "2026-10-14T07:00:00", "method": "SSI", "mode_index": 3, "frequency_hz": 2.1874335393111553, "damping_ratio": 0.0058312341677831964}, {"timestamp": "2026-10-14T07:00:00", "method": "SSI", "mode_index": 4, "frequency_hz": 5.376289212432442, "damping_ratio": 0.01304104210866617}, {"timestamp": "2026-10-14T07:00:00", "method": "SSI", "mode_index": 5, "frequency_hz": 5.8973462401744765, "damping_ratio": 0.028613786838925372}, {"timestamp": "2026-10-14T08:00:00", "method": "FDD", "mode_index": 1, "frequency_hz": 1.7661761866552759, "damping_ratio": NaN}, {"timestamp": "2026-10-14T08:00:00", "method": "FDD", "mode_index": 2, "frequency_hz": 1.9382085574629964, "damping_ratio": NaN}, {"timestamp": "2026-10-14T08:00:00", "method": "FDD", "mode_index": 3, "frequency_hz": 2.1802955694791075, "damping_ratio": NaN}, {"timestamp": "2026-10-14T08:00:00", "method": "FDD", "mode_index": 4, "frequency_hz": 5.3593020255827994, "damping_ratio": NaN}, {"timestamp": "2026-10-14T08:00:00", "method": "FDD", "mode_index": 5, "frequency_hz": 5.79874176221109, "damping_ratio": NaN}, {"timestamp": "2026-10-14T08:00:00", "method": "SSI", "mode_index": 1, "frequency_hz": 1.7662337956737857, "damping_ratio": 0.0059205404993284355}, {"timestamp": "2026-10-14T08:00:00", "method": "SSI", "mode_index": 2, "frequency_hz": 1.9356031753265268, "damping_ratio": 0.0070181740484209386}, {"timestamp": "2026-10-14T08:00:00", "method": "SSI", "mode_index": 3, "frequency_hz": 2.184089262284755, "damping_ratio": 0.006230703929020993}, {"timestamp": "2026-10-14T08:00:00", "method": "SSI", "mode_index": 4, "frequency_hz": 5.373547253527374, "damping_ratio": 0.013224785123617773}, {"timestamp": "2026-10-14T08:00:00", "method": "SSI", "mode_index": 5, "frequency_hz": 5.775457616077244, "damping_ratio": 0.059805343585249485}, {"timestamp": "2026-10-14T09:00:00", "method": "FDD", "mode_index": 1, "frequency_hz": 1.768520700089261, "damping_ratio": NaN}, {"timestamp": "2026-10-14T09:00:00", "method": "FDD", "mode_index": 2, "frequency_hz": 1.9387020036553868, "damping_ratio": NaN}, {"timestamp": "2026-10-14T09:00:00", "method": "FDD", "mode_index": 3, "frequency_hz": 2.1877596017311953, "damping_ratio": NaN}, {"timestamp": "2026-10-14T09:00:00", "method": "FDD", "mode_index": 4, "frequency_hz": 5.252780477793527, "damping_ratio": NaN}, {"timestamp": "2026-10-14T09:00:00", "method": "FDD", "mode_index": 5, "frequency_hz": 5.797091146414411, "damping_ratio": NaN}, {"timestamp": "2026-10-14T09:00:00", "method": "SSI", "mode_index": 1, "frequency_hz": 1.7661472708025099, "damping_ratio": 0.0061611069832406265}, {"timestamp": "2026-10-14T09:00:00", "method": "SSI", "mode_index": 2, "frequency_hz": 1.9390643280851816, "damping_ratio": 0.00953016262623941}, {"timestamp": "2026-10-14T09:00:00", "method": "SSI", "mode_index": 3, "frequency_hz": 2.188645842180964, "damping_ratio": 0.006236007186495478}, {"timestamp": "2026-10-14T09:00:00", "method": "SSI", "mode_index": 4, "frequency_hz": 5.371176526455354, "damping_ratio": 0.012114310988780587}, {"timestamp": "2026-10-14T09:00:00", "method": "SSI", "mode_index": 5, "frequency_hz": 5.872809283597142, "damping_ratio": 0.0269425670233075}, {"timestamp": "2026-10-14T10:00:00", "method": "FDD", "mode_index": 1, "frequency_hz": 1.7681607403420305, "damping_ratio": NaN}, {"timestamp": "2026-10-14T10:00:00", "method": "FDD", "mode_index": 2, "frequency_hz": 1.9412500427167454, "damping_ratio": NaN}, {"timestamp": "2026-10-14T10:00:00", "method": "FDD", "mode_index": 3, "frequency_hz": 2.190432385385094, "damping_ratio": NaN}, {"timestamp": "2026-10-14T10:00:00", "method": "FDD", "mode_index": 4, "frequency_hz": 5.296870623266364, "damping_ratio": NaN}, {"timestamp": "2026-10-14T10:00:00", "method": "FDD", "mode_index": 5, "frequency_hz": 5.800443705750522, "damping_ratio": NaN}, {"timestamp": "2026-10-14T10:00:00", "method": "SSI", "mode_index": 1, "frequency_hz": 1.763496217528806, "damping_ratio": 0.006983746893071928}, {"timestamp": "2026-10-14T10:00:00", "method": "SSI", "mode_index": 2, "frequency_hz": 1.9438516855020957, "damping_ratio": 0.007700589715754794}, {"timestamp": "2026-10-14T10:00:00", "method": "SSI", "mode_index": 3, "frequency_hz": 2.188893499358489, "damping_ratio": 0.006538833181168894}, {"timestamp": "2026-10-14T10:00:00", "method": "SSI", "mode_index": 4, "frequency_hz": 5.371413629180346, "damping_ratio": 0.015730520890279154}, {"timestamp": "2026-10-14T10:00:00", "method": "SSI", "mode_index": 5, "frequency_hz": 5.860436764799542, "damping_ratio": 0.0278467575793748}, {"timestamp": "2026-10-14T12:00:00", "method": "FDD", "mode_index": 1, "frequency_hz": 1.769852056345998, "damping_ratio": NaN}, {"timestamp": "2026-10-14T12:00:00", "method": "FDD", "mode_index": 2, "frequency_hz": 1.949748896952038, "damping_ratio": NaN}, {"timestamp": "2026-10-14T12:00:00", "method": "FDD", "mode_index": 3, "frequency_hz": 2.195905991703495, "damping_ratio": NaN}, {"timestamp": "2026-10-14T12:00:00", "method": "FDD", "mode_index": 4, "frequency_hz": 5.315220411427325, "damping_ratio": NaN}, {"timestamp": "2026-10-14T12:00:00", "method": "FDD", "mode_index": 5, "frequency_hz": 5.801439402255294, "damping_ratio": NaN}, {"timestamp": "2026-10-14T12:00:00", "method": "SSI", "mode_index": 1, "frequency_hz": 1.7684163622123297, "damping_ratio": 0.0064015818247910965}, {"timestamp": "2026-10-14T12:00:00", "method": "SSI", "mode_index": 2, "frequency_hz": 1.950544924226624, "damping_ratio": 0.007871647274324649}, {"timestamp": "2026-10-14T12:00:00", "method": "SSI", "mode_index": 3, "frequency_hz": 2.196834400451153, "damping_ratio": 0.006423134824942911}, {"timestamp": "2026-10-14T12:00:00", "method": "SSI", "mode_index": 4, "frequency_hz": 5.381912047954293, "damping_ratio": 0.015360356131581739}, {"timestamp": "2026-10-14T12:00:00", "method": "SSI", "mode_index": 5, "frequency_hz": 5.8713607534745185, "damping_ratio": 0.022731754984409425}], "config": {"fdd":{"enabled":true},"ssi":{"enabled":true},"dashboard":{"compact_rolling":true,"auto_refresh_seconds":1800,"display_time_offset_hours":2,"display_block_end":true,"fit_data_range":true,"data_range_padding_ratio":0.05}}, "generated_at": "2026-10-14T15:10:51"};
+    const records = payload.records.map(d => ({
+      ...d,
+      date: new Date(d.timestamp),
+      frequency_hz: Number(d.frequency_hz),
+      mode_index: Number(d.mode_index)
+    }));
+    const colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#17becf", "#bcbd22"];
+    let refreshTimer = null;
+    let dailyReloadTimer = null;
+    let zoomRange = null;
+    let chartState = null;
+    let panState = null;
+
+    const els = {
+      generatedAt: document.getElementById("generatedAt"),
+      fromDate: document.getElementById("fromDate"),
+      toDate: document.getElementById("toDate"),
+      aggregation: document.getElementById("aggregation"),
+      methodChecks: document.getElementById("methodChecks"),
+      modeChecks: document.getElementById("modeChecks"),
+      applyBtn: document.getElementById("applyBtn"),
+      last7Btn: document.getElementById("last7Btn"),
+      last30Btn: document.getElementById("last30Btn"),
+      allBtn: document.getElementById("allBtn"),
+      zoomOutBtn: document.getElementById("zoomOutBtn"),
+      zoomInBtn: document.getElementById("zoomInBtn"),
+      resetZoomBtn: document.getElementById("resetZoomBtn"),
+      refresh: document.getElementById("refresh"),
+      statPoints: document.getElementById("statPoints"),
+      statRange: document.getElementById("statRange"),
+      statMethods: document.getElementById("statMethods"),
+      statModes: document.getElementById("statModes"),
+      chart: document.getElementById("chart"),
+      legend: document.getElementById("legend"),
+      tooltip: document.getElementById("tooltip"),
+    };
+
+    function dateOnly(d) {
+      return d.toISOString().slice(0, 10);
+    }
+    function dashboardOptions() {
+      return payload.config.dashboard || {};
+    }
+    function displayOffsetMs() {
+      const offsetHours = Number(dashboardOptions().display_time_offset_hours || 0);
+      const blockEndHours = dashboardOptions().display_block_end ? 1 : 0;
+      return (offsetHours + blockEndHours) * 3600000;
+    }
+    function displayDate(t) {
+      return new Date(t + displayOffsetMs());
+    }
+    function formatTimestamp(t) {
+      const d = displayDate(t);
+      const pad = n => String(n).padStart(2, "0");
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    }
+    function uniq(arr) {
+      return [...new Set(arr)].sort((a, b) => a > b ? 1 : -1);
+    }
+    function mean(arr) {
+      return arr.reduce((a, b) => a + b, 0) / arr.length;
+    }
+    function periodKey(d, agg) {
+      if (agg === "month") return d.timestamp.slice(0, 7);
+      if (agg === "day") return d.timestamp.slice(0, 10);
+      return d.timestamp.slice(0, 13) + ":00:00";
+    }
+    function periodDate(key, agg) {
+      if (agg === "month") return new Date(key + "-01T00:00:00");
+      if (agg === "day") return new Date(key + "T00:00:00");
+      return new Date(key);
+    }
+    function checkedValues(container) {
+      return [...container.querySelectorAll("input:checked")].map(i => i.value);
+    }
+    function buildChecks(container, values, prefix) {
+      container.innerHTML = "";
+      values.forEach(value => {
+        const id = `${prefix}-${value}`;
+        const label = document.createElement("label");
+        label.innerHTML = `<input type="checkbox" id="${id}" value="${value}" checked> ${value}`;
+        container.appendChild(label);
+      });
+    }
+    function init() {
+      document.body.classList.toggle("compact-dashboard", Boolean(dashboardOptions().compact_rolling));
+      els.generatedAt.textContent = payload.generated_at || "-";
+      const configuredMethods = [];
+      if (payload.config.fdd && payload.config.fdd.enabled !== false) configuredMethods.push("FDD");
+      if (payload.config.ssi && payload.config.ssi.enabled !== false) configuredMethods.push("SSI");
+      buildChecks(els.methodChecks, uniq([...configuredMethods, ...records.map(d => d.method)]), "method");
+      buildChecks(els.modeChecks, uniq(records.map(d => String(d.mode_index))).map(v => `Mode ${v}`), "modeLabel");
+      [...els.modeChecks.querySelectorAll("input")].forEach(input => {
+        input.value = input.value.replace("Mode ", "");
+      });
+      if (records.length) {
+        const dates = records.map(d => d.date).sort((a, b) => a - b);
+        els.fromDate.value = dateOnly(dates[0]);
+        els.toDate.value = dateOnly(dates[dates.length - 1]);
+      }
+      const defaultRefresh = payload.config.dashboard && payload.config.dashboard.auto_refresh_seconds;
+      if (defaultRefresh != null) {
+        els.refresh.value = String(defaultRefresh);
+      }
+      els.applyBtn.addEventListener("click", () => {
+        clearZoom();
+        render();
+      });
+      els.fromDate.addEventListener("change", () => {
+        clearZoom();
+        render();
+      });
+      els.toDate.addEventListener("change", () => {
+        clearZoom();
+        render();
+      });
+      els.aggregation.addEventListener("change", () => {
+        clearZoom();
+        render();
+      });
+      els.methodChecks.addEventListener("change", () => {
+        clearZoom();
+        render();
+      });
+      els.modeChecks.addEventListener("change", () => {
+        clearZoom();
+        render();
+      });
+      els.last7Btn.addEventListener("click", () => setLastDays(7));
+      els.last30Btn.addEventListener("click", () => setLastDays(30));
+      els.allBtn.addEventListener("click", () => {
+        const dates = records.map(d => d.date).sort((a, b) => a - b);
+        if (dates.length) {
+          els.fromDate.value = dateOnly(dates[0]);
+          els.toDate.value = dateOnly(dates[dates.length - 1]);
+        }
+        clearZoom();
+        render();
+      });
+      els.zoomInBtn.addEventListener("click", () => zoomBy(0.5));
+      els.zoomOutBtn.addEventListener("click", () => zoomBy(2));
+      els.resetZoomBtn.addEventListener("click", resetZoom);
+      els.chart.addEventListener("pointerdown", startPan);
+      window.addEventListener("pointermove", movePan);
+      window.addEventListener("pointerup", endPan);
+      window.addEventListener("pointercancel", endPan);
+      els.refresh.addEventListener("change", setupRefresh);
+      setupRefresh();
+      setupDailyReload();
+      render();
+    }
+    function setLastDays(days) {
+      const dates = records.map(d => d.date).sort((a, b) => a - b);
+      if (!dates.length) return;
+      const end = dates[dates.length - 1];
+      const start = new Date(end);
+      start.setDate(start.getDate() - days + 1);
+      els.fromDate.value = dateOnly(start);
+      els.toDate.value = dateOnly(end);
+      clearZoom();
+      render();
+    }
+    function setupRefresh() {
+      if (refreshTimer) clearInterval(refreshTimer);
+      const seconds = Number(els.refresh.value);
+      if (seconds > 0) refreshTimer = setInterval(() => location.reload(), seconds * 1000);
+    }
+    function setupDailyReload() {
+      if (dailyReloadTimer) clearTimeout(dailyReloadTimer);
+      const configured = String(dashboardOptions().daily_reload_time || "").trim();
+      const match = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(configured);
+      if (!match) return;
+      const now = new Date();
+      const next = new Date(now);
+      next.setHours(Number(match[1]), Number(match[2]), 0, 0);
+      if (next <= now) next.setDate(next.getDate() + 1);
+      dailyReloadTimer = setTimeout(() => location.reload(), next.getTime() - now.getTime());
+    }
+    function filteredRecords() {
+      const from = els.fromDate.value ? new Date(els.fromDate.value + "T00:00:00") : null;
+      const to = els.toDate.value ? new Date(els.toDate.value + "T23:59:59") : null;
+      const methods = checkedValues(els.methodChecks);
+      const modes = checkedValues(els.modeChecks).map(Number);
+      return records.filter(d => {
+        if (from && d.date < from) return false;
+        if (to && d.date > to) return false;
+        if (!methods.includes(d.method)) return false;
+        if (!modes.includes(d.mode_index)) return false;
+        return Number.isFinite(d.frequency_hz);
+      });
+    }
+    function aggregate(data) {
+      const agg = els.aggregation.value;
+      if (agg === "hour") return data;
+      const groups = new Map();
+      data.forEach(d => {
+        const key = `${d.method}|${d.mode_index}|${periodKey(d, agg)}`;
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(d);
+      });
+      return [...groups.entries()].map(([key, rows]) => {
+        const [method, mode, period] = key.split("|");
+        return {
+          timestamp: period,
+          date: periodDate(period, agg),
+          method,
+          mode_index: Number(mode),
+          frequency_hz: mean(rows.map(r => r.frequency_hz)),
+          damping_ratio: null,
+          count: rows.length
+        };
+      }).sort((a, b) => a.date - b.date);
+    }
+    function render() {
+      const data = aggregate(filteredRecords());
+      updateStats(data);
+      drawChart(data);
+    }
+    function updateStats(data) {
+      els.statPoints.textContent = String(data.length);
+      if (!data.length) {
+        els.statRange.textContent = "-";
+        els.statMethods.textContent = "-";
+        els.statModes.textContent = "-";
+        return;
+      }
+      const dates = data.map(d => d.date).sort((a, b) => a - b);
+      els.statRange.textContent = formatRangeLabel(dates[0].getTime(), dates[dates.length - 1].getTime());
+      els.statMethods.textContent = uniq(data.map(d => d.method)).join(", ");
+      els.statModes.textContent = uniq(data.map(d => d.mode_index)).join(", ");
+    }
+    function formatRangeLabel(t0, t1) {
+      const span = Math.abs(t1 - t0);
+      if (dashboardOptions().fit_data_range || span <= 3 * 86400000) {
+        return `${formatTimestamp(t0).slice(0, 16)} / ${formatTimestamp(t1).slice(0, 16)}`;
+      }
+      return `${dateOnly(displayDate(t0))} / ${dateOnly(displayDate(t1))}`;
+    }
+    function drawChart(data) {
+      const svg = els.chart;
+      const width = svg.clientWidth || 1200;
+      const height = svg.clientHeight || 560;
+      const margin = {top: 24, right: 28, bottom: 56, left: 68};
+      svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+      svg.innerHTML = "";
+      els.legend.innerHTML = "";
+      if (!data.length) {
+        const foreign = document.createElementNS("http://www.w3.org/2000/svg", "foreignObject");
+        foreign.setAttribute("x", 0);
+        foreign.setAttribute("y", 0);
+        foreign.setAttribute("width", width);
+        foreign.setAttribute("height", height);
+        foreign.innerHTML = `<div class="empty">No data for the current selection</div>`;
+        svg.appendChild(foreign);
+        chartState = null;
+        svg.classList.remove("can-pan", "is-panning");
+        return;
+      }
+      const plotW = width - margin.left - margin.right;
+      const plotH = height - margin.top - margin.bottom;
+      const xs = data.map(d => d.date.getTime());
+      const baseRange = selectedTimeRange(xs);
+      const range = activeTimeRange(baseRange);
+      const xMin = range.xMin, xMax = range.xMax;
+      chartState = {baseRange, currentRange: range, plotW};
+      svg.classList.toggle("can-pan", canPan());
+      const chartData = data.filter(d => {
+        const t = d.date.getTime();
+        return t >= xMin && t <= xMax;
+      });
+      const ySource = chartData.length ? chartData : data;
+      const ys = ySource.map(d => d.frequency_hz);
+      const yMinRaw = Math.min(...ys), yMaxRaw = Math.max(...ys);
+      const yPad = Math.max((yMaxRaw - yMinRaw) * 0.08, 0.05);
+      const yMin = yMinRaw - yPad, yMax = yMaxRaw + yPad;
+      const sx = t => margin.left + (xMax === xMin ? plotW / 2 : (t - xMin) / (xMax - xMin) * plotW);
+      const sy = y => margin.top + (yMax - y) / (yMax - yMin) * plotH;
+      drawGrid(svg, margin, plotW, plotH, yMin, yMax, sy);
+      drawAxes(svg, margin, width, height, xMin, xMax, yMin, yMax, sx, sy);
+      const series = groupSeries(chartData);
+      series.forEach((rows, name) => drawSeries(svg, rows, name, sx, sy));
+      drawLegend(series);
+    }
+    function selectedTimeRange(xs) {
+      const selectedFrom = els.fromDate.value ? new Date(els.fromDate.value + "T00:00:00").getTime() : null;
+      const selectedTo = els.toDate.value ? new Date(els.toDate.value + "T23:59:59").getTime() : null;
+      const dataMin = Math.min(...xs);
+      const dataMax = Math.max(...xs);
+      if (dashboardOptions().fit_data_range) {
+        const span = Math.max(dataMax - dataMin, 1);
+        const pad = span * Number(dashboardOptions().data_range_padding_ratio || 0);
+        return {
+          xMin: dataMin - pad,
+          xMax: dataMax + pad
+        };
+      }
+      return {
+        xMin: selectedFrom == null ? dataMin : selectedFrom,
+        xMax: selectedTo == null ? dataMax : selectedTo
+      };
+    }
+    function activeTimeRange(baseRange) {
+      if (!zoomRange) return baseRange;
+      const baseSpan = Math.max(baseRange.xMax - baseRange.xMin, 1);
+      const minSpan = minZoomSpanMs();
+      let xMin = Math.max(baseRange.xMin, zoomRange.xMin);
+      let xMax = Math.min(baseRange.xMax, zoomRange.xMax);
+      if (xMax - xMin < minSpan || xMax <= xMin || xMax - xMin >= baseSpan) {
+        zoomRange = null;
+        return baseRange;
+      }
+      return {xMin, xMax};
+    }
+    function clearZoom() {
+      zoomRange = null;
+      panState = null;
+      els.chart.classList.remove("can-pan", "is-panning");
+    }
+    function resetZoom() {
+      clearZoom();
+      render();
+    }
+    function zoomBy(factor) {
+      const data = aggregate(filteredRecords());
+      if (!data.length) return;
+      const xs = data.map(d => d.date.getTime());
+      const base = selectedTimeRange(xs);
+      const current = activeTimeRange(base);
+      const baseSpan = Math.max(base.xMax - base.xMin, 1);
+      const minSpan = minZoomSpanMs();
+      let span = Math.max((current.xMax - current.xMin) * factor, minSpan);
+      if (span >= baseSpan) {
+        resetZoom();
+        return;
+      }
+      const center = (current.xMin + current.xMax) / 2;
+      let xMin = center - span / 2;
+      let xMax = center + span / 2;
+      if (xMin < base.xMin) {
+        xMax += base.xMin - xMin;
+        xMin = base.xMin;
+      }
+      if (xMax > base.xMax) {
+        xMin -= xMax - base.xMax;
+        xMax = base.xMax;
+      }
+      zoomRange = {xMin: Math.max(base.xMin, xMin), xMax: Math.min(base.xMax, xMax)};
+      render();
+    }
+    function canPan() {
+      if (!chartState || !zoomRange) return false;
+      const base = chartState.baseRange;
+      const current = chartState.currentRange;
+      return current.xMax - current.xMin < base.xMax - base.xMin;
+    }
+    function startPan(ev) {
+      if (ev.button !== 0 || !canPan()) return;
+      panState = {
+        pointerId: ev.pointerId,
+        startClientX: ev.clientX,
+        startRange: {...chartState.currentRange}
+      };
+      els.chart.classList.add("is-panning");
+      els.chart.setPointerCapture?.(ev.pointerId);
+      hideTooltip();
+      ev.preventDefault();
+    }
+    function movePan(ev) {
+      if (!panState || !chartState) return;
+      const dx = ev.clientX - panState.startClientX;
+      const span = panState.startRange.xMax - panState.startRange.xMin;
+      const deltaMs = -dx / Math.max(chartState.plotW, 1) * span;
+      zoomRange = clampRange(
+        panState.startRange.xMin + deltaMs,
+        panState.startRange.xMax + deltaMs,
+        chartState.baseRange
+      );
+      render();
+      ev.preventDefault();
+    }
+    function endPan() {
+      if (!panState) return;
+      els.chart.releasePointerCapture?.(panState.pointerId);
+      panState = null;
+      els.chart.classList.remove("is-panning");
+    }
+    function clampRange(xMin, xMax, base) {
+      const span = xMax - xMin;
+      if (xMin < base.xMin) {
+        xMax += base.xMin - xMin;
+        xMin = base.xMin;
+      }
+      if (xMax > base.xMax) {
+        xMin -= xMax - base.xMax;
+        xMax = base.xMax;
+      }
+      return {
+        xMin: Math.max(base.xMin, xMin),
+        xMax: Math.min(base.xMax, xMax)
+      };
+    }
+    function minZoomSpanMs() {
+      const agg = els.aggregation.value;
+      if (agg === "month") return 31 * 86400000;
+      if (agg === "day") return 86400000;
+      return 3600000;
+    }
+    function groupSeries(data) {
+      const map = new Map();
+      data.forEach(d => {
+        const key = `${d.method} Mode ${d.mode_index}`;
+        if (!map.has(key)) map.set(key, []);
+        map.get(key).push(d);
+      });
+      return new Map([...map.entries()].sort((a, b) => a[0].localeCompare(b[0])));
+    }
+    function drawGrid(svg, margin, plotW, plotH, yMin, yMax, sy) {
+      const g = node("g", {class: "grid"});
+      for (let i = 0; i <= 5; i++) {
+        const y = yMin + (yMax - yMin) * i / 5;
+        g.appendChild(node("line", {x1: margin.left, x2: margin.left + plotW, y1: sy(y), y2: sy(y)}));
+      }
+      svg.appendChild(g);
+    }
+    function drawAxes(svg, margin, width, height, xMin, xMax, yMin, yMax, sx, sy) {
+      const g = node("g", {class: "axis"});
+      g.appendChild(node("line", {x1: margin.left, x2: width - margin.right, y1: height - margin.bottom, y2: height - margin.bottom}));
+      g.appendChild(node("line", {x1: margin.left, x2: margin.left, y1: margin.top, y2: height - margin.bottom}));
+      for (let i = 0; i <= 5; i++) {
+        const y = yMin + (yMax - yMin) * i / 5;
+        const ty = sy(y);
+        g.appendChild(textNode(margin.left - 10, ty + 4, y.toFixed(2), "end"));
+      }
+      const tickValues = timeTicks(xMin, xMax, width - margin.left - margin.right);
+      tickValues.forEach(t => {
+        const x = sx(t);
+        const label = formatTickLabel(t, xMin, xMax);
+        g.appendChild(textNode(x, height - margin.bottom + 24, label, "middle"));
+      });
+      g.appendChild(textNode(18, height / 2, "Frequency [Hz]", "middle", "rotate(-90 18 " + height / 2 + ")"));
+      g.appendChild(textNode(width / 2, height - 12, "Tiempo", "middle"));
+      svg.appendChild(g);
+    }
+    function timeTicks(xMin, xMax, plotW) {
+      const agg = els.aggregation.value;
+      const span = Math.max(xMax - xMin, 1);
+      const maxTicks = Math.min(10, Math.max(2, Math.floor(plotW / 110)));
+      if (agg === "hour" && span <= 2 * 86400000) {
+        const stepHours = span <= 12 * 3600000 ? 1 : span <= 36 * 3600000 ? 3 : 6;
+        const stepMs = stepHours * 3600000;
+        const start = new Date(xMin);
+        start.setMinutes(0, 0, 0);
+        let t = start.getTime();
+        while (t < xMin) t += stepMs;
+        const ticks = [];
+        while (t <= xMax && ticks.length < maxTicks + 2) {
+          ticks.push(t);
+          t += stepMs;
+        }
+        return ticks.length >= 2 ? ticks : [xMin, xMax];
+      }
+      const ticks = Math.min(8, Math.max(2, Math.floor(plotW / 140)));
+      return Array.from({length: ticks}, (_, i) => xMin + span * i / Math.max(ticks - 1, 1));
+    }
+    function formatTickLabel(t, xMin, xMax) {
+      const d = displayDate(t);
+      const pad = n => String(n).padStart(2, "0");
+      const span = xMax - xMin;
+      const hhmm = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      if (els.aggregation.value === "hour" && span <= 2 * 86400000) return hhmm;
+      if (span <= 14 * 86400000) return `${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${hhmm}`;
+      if (els.aggregation.value === "month") return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    }
+    function seriesColor(name) {
+      const match = name.match(/Modo\s+(\d+)/);
+      const mode = match ? Number(match[1]) : 1;
+      return colors[(mode - 1) % colors.length];
+    }
+    function seriesDash(name) {
+      return name.startsWith("SSI ") ? "6 4" : "";
+    }
+    function seriesOffset(name) {
+      return name.startsWith("SSI ") ? 2.5 : -2.5;
+    }
+    function seriesMarker(name, x, y, color) {
+      if (name.startsWith("SSI ")) {
+        const g = node("g", {});
+        const size = 4.5;
+        g.appendChild(node("line", {x1: x - size, x2: x + size, y1: y - size, y2: y + size, stroke: color, "stroke-width": 2}));
+        g.appendChild(node("line", {x1: x - size, x2: x + size, y1: y + size, y2: y - size, stroke: color, "stroke-width": 2}));
+        return g;
+      }
+      return node("circle", {cx: x, cy: y, r: 3.6, fill: color});
+    }
+    function drawSeries(svg, rows, name, sx, sy) {
+      rows.sort((a, b) => a.date - b.date);
+      const color = seriesColor(name);
+      const maxGap = gapLimitMs();
+      let previousTime = null;
+      const offset = seriesOffset(name);
+      const path = rows.map((d) => {
+        const t = d.date.getTime();
+        const cmd = previousTime == null || t - previousTime > maxGap ? "M" : "L";
+        previousTime = t;
+        return `${cmd} ${(sx(t) + offset).toFixed(2)} ${sy(d.frequency_hz).toFixed(2)}`;
+      }).join(" ");
+      svg.appendChild(node("path", {d: path, fill: "none", stroke: color, "stroke-width": 2, "stroke-dasharray": seriesDash(name)}));
+      rows.forEach(d => {
+        const x = sx(d.date.getTime()) + offset;
+        const y = sy(d.frequency_hz);
+        const marker = seriesMarker(name, x, y, color);
+        const hit = node("circle", {cx: x, cy: y, r: 8, fill: "transparent"});
+        const g = node("g", {});
+        g.appendChild(marker);
+        g.appendChild(hit);
+        g.addEventListener("mousemove", ev => showTooltip(ev, d));
+        g.addEventListener("mouseleave", hideTooltip);
+        svg.appendChild(g);
+      });
+    }
+    function gapLimitMs() {
+      const agg = els.aggregation.value;
+      if (agg === "month") return 45 * 86400000;
+      if (agg === "day") return 36 * 3600000;
+      return 90 * 60000;
+    }
+    function drawLegend(series) {
+      [...series.keys()].forEach((name) => {
+        const item = document.createElement("span");
+        item.innerHTML = `<i class="swatch" style="background:${seriesColor(name)}"></i>${name}${seriesDash(name) ? " (SSI)" : ""}`;
+        els.legend.appendChild(item);
+      });
+    }
+    function showTooltip(ev, d) {
+      const count = d.count ? `<br>n: ${d.count}` : "";
+      const damping = d.damping_ratio == null ? "" : `<br>Damping: ${Number(d.damping_ratio).toFixed(4)}`;
+      const displayTs = formatTimestamp(d.date.getTime());
+      const rawTs = displayOffsetMs() ? `<br>Data time: ${d.timestamp}` : "";
+      els.tooltip.innerHTML = `${d.method} Modo ${d.mode_index}<br>${displayTs}${rawTs}<br>${d.frequency_hz.toFixed(5)} Hz${damping}${count}`;
+      els.tooltip.style.left = `${ev.clientX + 12}px`;
+      els.tooltip.style.top = `${ev.clientY + 12}px`;
+      els.tooltip.style.display = "block";
+    }
+    function hideTooltip() {
+      els.tooltip.style.display = "none";
+    }
+    function node(name, attrs) {
+      const el = document.createElementNS("http://www.w3.org/2000/svg", name);
+      Object.entries(attrs || {}).forEach(([k, v]) => el.setAttribute(k, v));
+      return el;
+    }
+    function textNode(x, y, text, anchor, transform) {
+      const el = node("text", {x, y, "text-anchor": anchor || "start"});
+      if (transform) el.setAttribute("transform", transform);
+      el.textContent = text;
+      return el;
+    }
+    window.addEventListener("resize", render);
+    init();
+  </script>
+</body>
+</html>
